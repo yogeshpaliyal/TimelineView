@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="TimelineViewTheme">
+        <attr format="reference" name="timelineViewStyle"/>
+    </declare-styleable>
+
+    <declare-styleable name="TimelineView">
+        <attr name="timelineBgSelection" format="integer" />
+        <attr name="timelineBgAvailability" format="integer" />
+        <attr name="timelineBgBooking" format="integer" />
+        <attr name="timelineThumb1Bg" format="reference|color" />
+        <attr name="timelineThumb2Bg" format="reference|color" />
+        <attr name="timelineThumbTextSize" format="dimension" />
+        <attr name="timelineDescTextSize" format="dimension" />
+
+    </declare-styleable>
+</resources>
