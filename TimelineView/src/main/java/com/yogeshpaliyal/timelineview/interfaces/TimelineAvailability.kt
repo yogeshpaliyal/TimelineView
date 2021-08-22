@@ -5,7 +5,6 @@ import java.util.*
 
 interface TimelineAvailability {
 
-    var thumb : Thumb?
 
     fun getTAStartTime() : Calendar
     fun getTAEndTime() : Calendar

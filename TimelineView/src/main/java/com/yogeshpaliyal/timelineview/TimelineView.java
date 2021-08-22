@@ -631,7 +631,8 @@ public class TimelineView extends FrameLayout {
             } else {
                 for (TimelineAvailability availabilitySlot : arrAvailabilitySlots) {
                     if (availabilitySlot.getCancelButton() != null) {
-                        if (coordinate > availabilitySlot.getCancelButton().getPosition() && coordinate < availabilitySlot.getCancelButton().getPosition() + thumbHeight) {
+                        if (coordinate > availabilitySlot.getCancelButton().getPosition()
+                                && coordinate < availabilitySlot.getCancelButton().getPosition() + thumbHeight) {
                             mListener.onCancelClicked(availabilitySlot);
                             break;
                         }
