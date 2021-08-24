@@ -5,13 +5,14 @@ import android.os.Bundle
 import com.yogeshpaliyal.timelineview.TYPE
 import com.yogeshpaliyal.timelineview.TimelineView
 import com.yogeshpaliyal.timelineviewsample.databinding.ActivityMainBinding
+import java.util.ArrayList
 
 class MainActivity : AppCompatActivity() {
 
     lateinit var binding: ActivityMainBinding
 
-    private val arrAvaialability by lazy {
-
+    private val arrAvailability by lazy {
+        ArrayList<AvailabilityModel>()
     }
 
 
@@ -25,15 +26,22 @@ class MainActivity : AppCompatActivity() {
         }
 
         binding.btnSeller.setOnClickListener {
-            binding.timeline.setType(TYPE.SET_AVAILABILITY)
+            binding.timeline.type = TYPE.SET_AVAILABILITY
         }
 
         binding.btnBuyer.setOnClickListener {
-            binding.timeline.setType(TYPE.BOOK_SLOT)
+            binding.timeline.type = TYPE.BOOK_SLOT
         }
 
         binding.btnAdd.setOnClickListener{
-            binding.timeline.ava
+            val startDate = binding.timeline.selectedStartDateTime
+            val endDate = binding.timeline.selectedEndDateTime
+            if (binding.timeline.type == TYPE.SET_AVAILABILITY) {
+                arrAvailability.add(AvailabilityModel(startDate,endDate))
+                binding.timeline.setArrAvailabilitySlots(arrAvailability.toList())
+            }else{
+                binding.timeline.setArrAvailabilitySlots(arrAvailability.toList())
+            }
         }
     }
 }

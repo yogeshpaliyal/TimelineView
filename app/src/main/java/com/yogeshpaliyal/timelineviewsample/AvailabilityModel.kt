@@ -4,21 +4,10 @@ import com.yogeshpaliyal.timelineview.Thumb
 import com.yogeshpaliyal.timelineview.interfaces.TimelineAvailability
 import java.util.*
 
-data class AvailabilityModel(val startTime: String) : TimelineAvailability{
-    override var thumb: Thumb?
-        get() = TODO("Not yet implemented")
-        set(value) {}
+data class AvailabilityModel(val startTime: Calendar,val endTime: Calendar,) : TimelineAvailability{
 
-    override fun getTAStartTime(): Calendar {
+    override fun getTAStartTime(): Calendar  = startTime
 
-    }
-
-    override fun getTAEndTime(): Calendar {
-
-    }
-
-    override fun setCancelButton(thumb: Thumb?) {
-
-    }
+    override fun getTAEndTime(): Calendar = endTime
 
 }

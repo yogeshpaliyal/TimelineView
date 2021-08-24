@@ -24,17 +24,24 @@ import com.yogeshpaliyal.timelineview.interfaces.TimelineBooked;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.List;
 
 public class TimelineView extends FrameLayout {
 
     private static final int MAX_CLICK_DURATION = 1000;
     private static final String TAG = "TimelineFrameLAyout";
+
     Drawable drawableAva;
     Drawable drawableBooking;
+
     private boolean isAutoScrolled;
+
     private Long mStartClickTime;
+
     private TimelineListener mListener;
+
     private ArrayList<String> arrTimes = new ArrayList<>();
+
     private boolean isEditingEnable = false;
     private String TIME_FORMAT = "hh:mm a";
     private float startPadding = convertToPx(30);
@@ -56,9 +63,10 @@ public class TimelineView extends FrameLayout {
     private float thumbWidth = convertToPx(100);
     private float thumbRightMargin = thumbWidth + convertToPx(20);
     private ArrayList<Thumb> arrThumb = new ArrayList<>();
-    private ArrayList<TimelineAvailability> arrGlobalData = new ArrayList();
-    private ArrayList<TimelineAvailability> arrAvailabilitySlots = new ArrayList();
-    private ArrayList<TimelineBooked> arrBookedSlots = new ArrayList();
+    private List<TimelineAvailability> arrGlobalData = new ArrayList();
+    private List<TimelineAvailability> arrAvailabilitySlots = new ArrayList();
+    private List<TimelineBooked> arrBookedSlots = new ArrayList();
+    private List<TimelineBooked> arrBookedSlotsRaw = new ArrayList(); // non filtered list
     private SelectedArea selection;
     private int currentThumbIndex = 0;
     private Thumb currentThumb = null;
@@ -81,8 +89,14 @@ public class TimelineView extends FrameLayout {
         init(context, attrs, defStyleAttr);
     }
 
-    public void setArrAvailabilitySlots(ArrayList<TimelineAvailability> arrAvailabilitySlots) {
+    public void setArrAvailabilitySlots(List<TimelineAvailability> arrAvailabilitySlots) {
         this.arrGlobalData = arrAvailabilitySlots;
+        filterTodays();
+        invalidate();
+    }
+
+    public void setBookingsSlots(List<TimelineBooked> arrBookedSlots) {
+        this.arrBookedSlotsRaw = arrBookedSlots;
         filterTodays();
         invalidate();
     }
@@ -126,8 +140,16 @@ public class TimelineView extends FrameLayout {
         return DateTimeHelper.convertDateStrIntoCalendar(arrTimes.get((int) selection.getStartStep()), TIME_FORMAT);
     }
 
+    public Calendar getSelectedStartDateTime() {
+        return DateTimeHelper.getCalendar(selectedDate.getTimeInMillis()+DateTimeHelper.convertDateStrIntoCalendar(arrTimes.get((int) selection.getStartStep()), TIME_FORMAT).getTimeInMillis(),false, false,false,false);
+    }
+
     public Calendar getSelectedEndTime() {
         return DateTimeHelper.convertDateStrIntoCalendar(arrTimes.get((int) selection.getEndStep()), TIME_FORMAT);
+    }
+
+    public Calendar getSelectedEndDateTime() {
+        return DateTimeHelper.getCalendar(selectedDate.getTimeInMillis()+DateTimeHelper.convertDateStrIntoCalendar(arrTimes.get((int) selection.getEndStep()), TIME_FORMAT).getTimeInMillis(),false, false,false,false);
     }
 
     @Override
@@ -157,6 +179,10 @@ public class TimelineView extends FrameLayout {
     public void setType(TYPE type) {
         this.type = type;
         invalidate();
+    }
+
+    public TYPE getType() {
+        return this.type;
     }
 
     private float descPaintSize = convertSpToPx(14);
@@ -196,19 +222,19 @@ public class TimelineView extends FrameLayout {
 
         selectedDrawable = a.getDrawable(R.styleable.TimelineView_timelineBgSelection);
 
-        if (selectedDrawable == null){
-           selectedDrawable = ResourcesCompat.getDrawable(res,R.drawable.bg_default_selected, theme);
+        if (selectedDrawable == null) {
+            selectedDrawable = ResourcesCompat.getDrawable(res, R.drawable.bg_default_selected, theme);
         }
 
         drawableAva = a.getDrawable(R.styleable.TimelineView_timelineBgAvailability);
-        if (drawableAva == null){
-            drawableAva = ResourcesCompat.getDrawable(res,R.drawable.bg_default_availability, theme);
+        if (drawableAva == null) {
+            drawableAva = ResourcesCompat.getDrawable(res, R.drawable.bg_default_availability, theme);
         }
 
 
         drawableBooking = a.getDrawable(R.styleable.TimelineView_timelineBgBooking);
-        if (drawableBooking == null){
-            drawableBooking = ResourcesCompat.getDrawable(res,R.drawable.bg_default_booking, theme);
+        if (drawableBooking == null) {
+            drawableBooking = ResourcesCompat.getDrawable(res, R.drawable.bg_default_booking, theme);
         }
         a.recycle();
 
@@ -307,22 +333,26 @@ public class TimelineView extends FrameLayout {
         return calendar.get(Calendar.MINUTE) + (calendar.get(Calendar.HOUR_OF_DAY) * 60);
     }
 
+    private Boolean isInSelectedData(Calendar selectedDate, Calendar startCal, Calendar endCal) {
+        return (selectedDate.get(Calendar.YEAR) == startCal.get(Calendar.YEAR) &&
+                selectedDate.get(Calendar.MONTH) == startCal.get(Calendar.MONTH) &&
+                selectedDate.get(Calendar.DAY_OF_MONTH) == startCal.get(Calendar.DAY_OF_MONTH)) ||
+                (selectedDate.get(Calendar.YEAR) == endCal.get(Calendar.YEAR) &&
+                        selectedDate.get(Calendar.MONTH) == endCal.get(Calendar.MONTH) &&
+                        selectedDate.get(Calendar.DAY_OF_MONTH) == endCal.get(Calendar.DAY_OF_MONTH));
+    }
+
     private void filterTodays() {
         arrAvailabilitySlots = new ArrayList<>();
         for (TimelineAvailability arrAvailabilitySlot : this.arrGlobalData) {
-            if ((selectedDate.get(Calendar.YEAR) == arrAvailabilitySlot.getTAStartTime().get(Calendar.YEAR) &&
-                    selectedDate.get(Calendar.MONTH) == arrAvailabilitySlot.getTAStartTime().get(Calendar.MONTH) &&
-                    selectedDate.get(Calendar.DAY_OF_MONTH) == arrAvailabilitySlot.getTAStartTime().get(Calendar.DAY_OF_MONTH)) ||
-                    (selectedDate.get(Calendar.YEAR) == arrAvailabilitySlot.getTAEndTime().get(Calendar.YEAR) &&
-                            selectedDate.get(Calendar.MONTH) == arrAvailabilitySlot.getTAEndTime().get(Calendar.MONTH) &&
-                            selectedDate.get(Calendar.DAY_OF_MONTH) == arrAvailabilitySlot.getTAEndTime().get(Calendar.DAY_OF_MONTH))) {
-               /* if (DateTimeHelper.isTodayCalendar(selectedDate)){
-
-                }else {*/
+            if (isInSelectedData(selectedDate, arrAvailabilitySlot.getTAStartTime(), arrAvailabilitySlot.getTAEndTime())) {
                 arrAvailabilitySlots.add(arrAvailabilitySlot);
-                //}
             }
-
+        }
+        for (TimelineBooked timelineBooked : arrBookedSlotsRaw) {
+            if (isInSelectedData(selectedDate, timelineBooked.getTBStartTime(), timelineBooked.getTBEndTime())) {
+                arrBookedSlotsRaw.add(timelineBooked);
+            }
         }
     }
 
@@ -410,9 +440,10 @@ public class TimelineView extends FrameLayout {
                 if (type == TYPE.SET_AVAILABILITY) {
 
 
-                    Thumb thumb = new Thumb(null);
+                    // TODO Cancel button setup
+                    /*Thumb thumb = new Thumb(null);
                     thumb.setPosition(top);
-                    arrAvailabilitySlot.setCancelButton(thumb);
+                    arrAvailabilitySlot.setCancelButton(thumb);*/
 
                     canvas.drawRoundRect(new RectF(left, top, left + thumbWidth, top + thumbHeight), radius, radius, mThumbPaint2);
 
@@ -567,27 +598,27 @@ public class TimelineView extends FrameLayout {
 
     private void drawThumb(Canvas canvas) {
         for (int i = 0; i < arrThumb.size(); i++) {
-           // if (arrThumb.get(i).getDrawable() != null) {
-                float dx = getMeasuredWidth() - thumbRightMargin;
-                float dy = 0;
+            // if (arrThumb.get(i).getDrawable() != null) {
+            float dx = getMeasuredWidth() - thumbRightMargin;
+            float dy = 0;
 
-                String text = "";
-                if (i == 0) {
-                    dy = stepScaleToPixel(selection.getStartStep()) - thumbHeight / 2;
-                    canvas.drawRoundRect(new RectF(dx, dy, dx + thumbWidth, dy + thumbHeight), radius, radius, mThumbPaint1);
-                    text = "Start";
-                } else {
-                    dy = stepScaleToPixel(selection.getEndStep()) - thumbHeight / 2;
-                    canvas.drawRoundRect(new RectF(dx, dy, dx + thumbWidth, dy + thumbHeight), radius, radius, mThumbPaint2);
-                    text = "Stop";
-                }
+            String text = "";
+            if (i == 0) {
+                dy = stepScaleToPixel(selection.getStartStep()) - thumbHeight / 2;
+                canvas.drawRoundRect(new RectF(dx, dy, dx + thumbWidth, dy + thumbHeight), radius, radius, mThumbPaint1);
+                text = "Start";
+            } else {
+                dy = stepScaleToPixel(selection.getEndStep()) - thumbHeight / 2;
+                canvas.drawRoundRect(new RectF(dx, dy, dx + thumbWidth, dy + thumbHeight), radius, radius, mThumbPaint2);
+                text = "Stop";
+            }
 
-                Rect rect = new Rect();
-                mThumbTextPaint.getTextBounds(text, 0, text.length(), rect);
-                float textx = (thumbWidth / 2) - (rect.width() / 2);
-                int yPos = (int) ((thumbHeight / 2) - ((mThumbTextPaint.descent() + mThumbTextPaint.ascent()) / 2));
-                canvas.drawText(text, textx + dx, yPos + dy, mThumbTextPaint);
-           // }
+            Rect rect = new Rect();
+            mThumbTextPaint.getTextBounds(text, 0, text.length(), rect);
+            float textx = (thumbWidth / 2) - (rect.width() / 2);
+            int yPos = (int) ((thumbHeight / 2) - ((mThumbTextPaint.descent() + mThumbTextPaint.ascent()) / 2));
+            canvas.drawText(text, textx + dx, yPos + dy, mThumbTextPaint);
+            // }
         }
 
     }
@@ -629,7 +660,8 @@ public class TimelineView extends FrameLayout {
                     currentThumb.getDrawable().setState(state);
                 getParent().requestDisallowInterceptTouchEvent(true);
             } else {
-                for (TimelineAvailability availabilitySlot : arrAvailabilitySlots) {
+                // TODO Cancel button click
+               /* for (TimelineAvailability availabilitySlot : arrAvailabilitySlots) {
                     if (availabilitySlot.getCancelButton() != null) {
                         if (coordinate > availabilitySlot.getCancelButton().getPosition()
                                 && coordinate < availabilitySlot.getCancelButton().getPosition() + thumbHeight) {
@@ -637,7 +669,7 @@ public class TimelineView extends FrameLayout {
                             break;
                         }
                     }
-                }
+                }*/
 
             }
         }
