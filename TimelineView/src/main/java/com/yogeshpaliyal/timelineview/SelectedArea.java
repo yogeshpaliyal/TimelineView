@@ -3,10 +3,10 @@ package com.yogeshpaliyal.timelineview;
 import android.graphics.drawable.Drawable;
 
 class SelectedArea {
-    private float startStep, endStep;
+    private int startStep, endStep;
     private Drawable drawable;
 
-    public SelectedArea(Drawable drawable, float startStep, float endStep) {
+    public SelectedArea(Drawable drawable, int startStep, int endStep) {
         this.startStep = startStep;
         this.endStep = endStep;
         this.drawable = drawable;
@@ -21,19 +21,19 @@ class SelectedArea {
         this.drawable = drawable;
     }
 
-    public float getStartStep() {
+    public int getStartStep() {
         return startStep;
     }
 
-    public void setStartStep(float startStep) {
+    public void setStartStep(int startStep) {
         this.startStep = startStep;
     }
 
-    public float getEndStep() {
+    public int getEndStep() {
         return endStep;
     }
 
-    public void setEndStep(float endStep) {
+    public void setEndStep(int endStep) {
         this.endStep = endStep;
     }
 

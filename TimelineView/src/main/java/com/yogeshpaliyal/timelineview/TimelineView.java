@@ -22,9 +22,12 @@ import com.yogeshpaliyal.commons_utils.LogHelper;
 import com.yogeshpaliyal.timelineview.interfaces.TimelineAvailability;
 import com.yogeshpaliyal.timelineview.interfaces.TimelineBooked;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
+import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 
 public class TimelineView extends FrameLayout {
 
@@ -40,21 +43,22 @@ public class TimelineView extends FrameLayout {
 
     private TimelineListener mListener;
 
-    private ArrayList<String> arrTimes = new ArrayList<>();
+    private long minutesInADay = TimeUnit.DAYS.toMinutes(1);
+
 
     private boolean isEditingEnable = false;
     private String TIME_FORMAT = "hh:mm a";
     private float startPadding = convertToPx(30);
     private TYPE type = TYPE.BOOK_SLOT;
     private boolean isPublishEnable = false;
-    private float startIndex = 50;
+    private int startIndex = 50;
     private Paint descPaint, textPaint, mThumbPaint1, mThumbPaint2, mThumbTextPaint;
-    private Calendar currentCalender, selectedDate = Calendar.getInstance();
+    private Calendar selectedDate = Calendar.getInstance();
     private Calendar todaysDate = Calendar.getInstance();
     private float lineGap = convertToPx(6);
     private float thumbFreeArea = convertToPx(5);
     private float paddingTopBottom = convertToPx(20);
-    private float minimumSteps = 5;
+    private int minimumSteps = 5;
     private float maxSteps = 0;
     private float radius = convertToPx(15);
     private float lineHeightBold = convertToPx(1);
@@ -101,7 +105,7 @@ public class TimelineView extends FrameLayout {
         invalidate();
     }
 
-    public void setMinimumSteps(float minimumSteps) {
+    public void setMinimumSteps(int minimumSteps) {
         if (minimumSteps > 0) {
             this.minimumSteps = minimumSteps;
         }
@@ -136,21 +140,27 @@ public class TimelineView extends FrameLayout {
         this.todaysDate = todaysDate;
     }
 
-    public Calendar getSelectedStartTime() {
-        return DateTimeHelper.convertDateStrIntoCalendar(arrTimes.get((int) selection.getStartStep()), TIME_FORMAT);
+    public int getSelectedStartTime() {
+        return selection.getStartStep();
     }
 
-    public Calendar getSelectedStartDateTime() {
-        return DateTimeHelper.getCalendar(selectedDate.getTimeInMillis()+DateTimeHelper.convertDateStrIntoCalendar(arrTimes.get((int) selection.getStartStep()), TIME_FORMAT).getTimeInMillis(),false, false,false,false);
+
+
+    public int getSelectedEndTime() {
+        return selection.getEndStep();
     }
 
-    public Calendar getSelectedEndTime() {
-        return DateTimeHelper.convertDateStrIntoCalendar(arrTimes.get((int) selection.getEndStep()), TIME_FORMAT);
+    public static Calendar convertDateStrIntoCalendar(String dateTimeStr, String dateFormatStr) {
+        try {
+            Calendar cal = Calendar.getInstance();
+            SimpleDateFormat sdf = new SimpleDateFormat(dateFormatStr, Locale.getDefault());
+            cal.setTime(sdf.parse(dateTimeStr));
+            return cal;
+        } catch (Exception e) {
+            return null;
+        }
     }
 
-    public Calendar getSelectedEndDateTime() {
-        return DateTimeHelper.getCalendar(selectedDate.getTimeInMillis()+DateTimeHelper.convertDateStrIntoCalendar(arrTimes.get((int) selection.getEndStep()), TIME_FORMAT).getTimeInMillis(),false, false,false,false);
-    }
 
     @Override
     protected void onSizeChanged(int viewWidth, int viewHeight, int oldw, int oldh) {
@@ -158,7 +168,7 @@ public class TimelineView extends FrameLayout {
     }
 
     public void setStartPosition(int coordinate) {
-        float startIndex = pixelToStep(coordinate);
+        int startIndex = pixelToStep(coordinate);
         selection = new SelectedArea(selectedDrawable, startIndex, startIndex + this.minimumSteps);
     }
 
@@ -189,10 +199,6 @@ public class TimelineView extends FrameLayout {
     private float thumbPaintSize = convertSpToPx(13);
 
     private void init(Context context, AttributeSet attrs, int defStyleAttr) {
-        currentCalender = Calendar.getInstance();
-        currentCalender.set(Calendar.AM_PM, Calendar.AM);
-        currentCalender.set(Calendar.MINUTE, 0);
-        currentCalender.set(Calendar.HOUR_OF_DAY, 0);
 
         descPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         descPaint.setColor(Color.BLACK);
@@ -200,7 +206,6 @@ public class TimelineView extends FrameLayout {
         mThumbTextPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         mThumbTextPaint.setColor(Color.WHITE);
 
-        fillArrayTimes();
 
         mThumbPaint1 = new Paint(Paint.ANTI_ALIAS_FLAG);
 
@@ -245,10 +250,6 @@ public class TimelineView extends FrameLayout {
 
         textPaint.setTextSize(textSize);
 
-        currentCalender = Calendar.getInstance();
-        currentCalender.set(Calendar.AM_PM, Calendar.AM);
-        currentCalender.set(Calendar.MINUTE, 0);
-        currentCalender.set(Calendar.HOUR_OF_DAY, 0);
 
 
         initSelectionArea();
@@ -269,7 +270,7 @@ public class TimelineView extends FrameLayout {
         return startIndex;
     }
 
-    public void setStartIndex(float startIndex) {
+    public void setStartIndex(int startIndex) {
         this.startIndex = startIndex;
     }
 
@@ -280,7 +281,7 @@ public class TimelineView extends FrameLayout {
     @Override
     public void onWindowFocusChanged(boolean hasWindowFocus) {
         super.onWindowFocusChanged(hasWindowFocus);
-        TimelineRuler timelineRuler = new TimelineRuler(getContext(), lineGap, arrTimes);
+        TimelineRuler timelineRuler = new TimelineRuler(getContext(), lineGap);
         timelineRuler.setTopPadding(paddingTopBottom);
         timelineRuler.setPaddingStart(startPadding);
         addView(timelineRuler);
@@ -369,7 +370,7 @@ public class TimelineView extends FrameLayout {
                     stepEnd = stepFromCalender(arrAvailabilitySlot.getTAEndTime());
                 } else if (endCalender.get(Calendar.DAY_OF_MONTH) > selectedDate.get(Calendar.DAY_OF_MONTH)) {
                     stepStart = stepFromCalender(arrAvailabilitySlot.getTAStartTime());
-                    stepEnd = arrTimes.size();
+                    stepEnd = minutesInADay;
                 } else {
                     stepStart = stepFromCalender(arrAvailabilitySlot.getTAStartTime());
                     stepEnd = stepFromCalender(arrAvailabilitySlot.getTAEndTime());
@@ -387,7 +388,6 @@ public class TimelineView extends FrameLayout {
         }
     }
 
-    @SuppressLint("NewApi")
     private void drawAvailabilitySlots(Canvas canvas) {
 
 
@@ -405,7 +405,7 @@ public class TimelineView extends FrameLayout {
                 stepEnd = stepFromCalender(arrAvailabilitySlot.getTAEndTime());
             } else if (endCalender.get(Calendar.DAY_OF_MONTH) > selectedDate.get(Calendar.DAY_OF_MONTH)) {
                 stepStart = stepFromCalender(arrAvailabilitySlot.getTAStartTime());
-                stepEnd = arrTimes.size();
+                stepEnd = minutesInADay;
             } else {
                 stepStart = stepFromCalender(arrAvailabilitySlot.getTAStartTime());
                 stepEnd = stepFromCalender(arrAvailabilitySlot.getTAEndTime());
@@ -545,11 +545,7 @@ public class TimelineView extends FrameLayout {
     }
 
     private String getTimeFromStep() {
-        Calendar calendar1 = DateTimeHelper.convertDateStrIntoCalendar(arrTimes.get((int) selection.getStartStep()), TIME_FORMAT);
-        Calendar calendar2 = DateTimeHelper.convertDateStrIntoCalendar(arrTimes.get((int) selection.getEndStep()), TIME_FORMAT);
-        long diff = calendar2.getTimeInMillis() - calendar1.getTimeInMillis();
-        long seconds = diff / 1000;
-        long minutes = seconds / 60;
+        float minutes = selection.getEndStep() - selection.getStartStep();
         return minutes + " Minutes";
     }
 
@@ -688,7 +684,7 @@ public class TimelineView extends FrameLayout {
                 long clickDuration = Calendar.getInstance().getTimeInMillis() - mStartClickTime;
                 if (clickDuration >= MAX_CLICK_DURATION) {
                     // long click
-                    float step = pixelToStep(asStep(coordinate));
+                    int step = pixelToStep(asStep(coordinate));
                     selection.setStartStep(step);
                     selection.setEndStep(step + minimumSteps);
                 }
@@ -700,9 +696,9 @@ public class TimelineView extends FrameLayout {
             coordinate = asStep(coordinate);
             float step = pixelToStep(coordinate);
 
-            if (step >= 0 && step < arrTimes.size()) {
-                float maxSteps = 0;
-                float minimumSteps = 1;
+            if (step >= 0 && step < minutesInADay) {
+                int maxSteps = 0;
+                int minimumSteps = 1;
                 if (isMoreStepsThanMax(currentThumbIndex, coordinate, maxSteps)) {
                     LogHelper.logD(TAG, "More than max");
                     if (currentThumbIndex == 0) {
@@ -735,10 +731,10 @@ public class TimelineView extends FrameLayout {
                 if (mListener != null) {
                     if (currentThumbIndex == 0) {
                         // start
-                        mListener.onStartChange(DateTimeHelper.convertDateStrIntoCalendar(arrTimes.get((int) selection.getStartStep()), TIME_FORMAT));
+                       // mListener.onStartChange(DateTimeHelper.formatCalendar(selection.getStartStep()));
                     } else {
                         // end
-                        mListener.onEndChange(DateTimeHelper.convertDateStrIntoCalendar(arrTimes.get((int) selection.getEndStep()), TIME_FORMAT));
+                        //mListener.onEndChange(DateTimeHelper.convertDateStrIntoCalendar(arrTimes.get((int) selection.getEndStep()), TIME_FORMAT));
                     }
                 }
             }
@@ -771,7 +767,7 @@ public class TimelineView extends FrameLayout {
                     endStep = stepFromCalender(availabilitySlot.getTAEndTime());
                 } else if (endCalender.get(Calendar.DAY_OF_MONTH) > selectedDate.get(Calendar.DAY_OF_MONTH)) {
                     startStep = stepFromCalender(availabilitySlot.getTAStartTime());
-                    endStep = arrTimes.size();
+                    endStep = minutesInADay;
                 } else {
                     startStep = stepFromCalender(availabilitySlot.getTAStartTime());
                     endStep = stepFromCalender(availabilitySlot.getTAEndTime());
@@ -881,13 +877,13 @@ public class TimelineView extends FrameLayout {
         return pixelValue + paddingTopBottom;
     }
 
-    private float pixelToStep(float pixelValue) {
+    private int pixelToStep(float pixelValue) {
         float gap = lineGap;
         float stepScaleValue = Math.round((pixelValue - paddingTopBottom) / gap);
         if (stepScaleValue < 0) {
             return 0;
-        } else if (stepScaleValue > arrTimes.size()) {
-            return arrTimes.size();
+        } else if (stepScaleValue > minutesInADay) {
+            return (int) minutesInADay;
         } else {
             return Math.round(stepScaleValue);
         }
@@ -924,19 +920,6 @@ public class TimelineView extends FrameLayout {
             }
         }
         return closest;
-    }
-
-    private void fillArrayTimes() {
-        Calendar endDate = Calendar.getInstance();
-
-
-        while (true) {
-            arrTimes.add(DateTimeHelper.formatCalendar(currentCalender, TIME_FORMAT));
-            currentCalender.add(Calendar.MINUTE, 1);
-            if (endDate.get(Calendar.DAY_OF_MONTH) != currentCalender.get(Calendar.DAY_OF_MONTH)) {
-                break;
-            }
-        }
     }
 
 

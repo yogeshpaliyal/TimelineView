@@ -5,7 +5,8 @@ import android.os.Bundle
 import com.yogeshpaliyal.timelineview.TYPE
 import com.yogeshpaliyal.timelineview.TimelineView
 import com.yogeshpaliyal.timelineviewsample.databinding.ActivityMainBinding
-import java.util.ArrayList
+import java.util.*
+import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity() {
 
@@ -33,13 +34,19 @@ class MainActivity : AppCompatActivity() {
             binding.timeline.type = TYPE.BOOK_SLOT
         }
 
-        binding.btnAdd.setOnClickListener{
-            val startDate = binding.timeline.selectedStartDateTime
-            val endDate = binding.timeline.selectedEndDateTime
+        binding.btnAdd.setOnClickListener {
+            val startDate =
+                binding.timeline.selectedDate.timeInMillis + TimeUnit.MINUTES.toMillis(binding.timeline.selectedStartTime.toLong())
+            val endDate =
+                binding.timeline.selectedDate.timeInMillis + TimeUnit.MINUTES.toMillis(binding.timeline.selectedEndTime.toLong())
             if (binding.timeline.type == TYPE.SET_AVAILABILITY) {
-                arrAvailability.add(AvailabilityModel(startDate,endDate))
+                arrAvailability.add(AvailabilityModel(Calendar.getInstance().also {
+                    it.timeInMillis = startDate
+                }, Calendar.getInstance().also {
+                    it.timeInMillis = endDate
+                }))
                 binding.timeline.setArrAvailabilitySlots(arrAvailability.toList())
-            }else{
+            } else {
                 binding.timeline.setArrAvailabilitySlots(arrAvailability.toList())
             }
         }

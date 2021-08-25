@@ -8,11 +8,19 @@ import android.graphics.Paint;
 import android.util.AttributeSet;
 import android.view.View;
 
+import androidx.annotation.NonNull;
+
+import com.yogeshpaliyal.commons_utils.DateTimeHelper;
 import com.yogeshpaliyal.commons_utils.DisplayHelper;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Locale;
+import java.util.TimeZone;
+import java.util.concurrent.TimeUnit;
 
-public class TimelineRuler extends View {
+public class TimelineRuler extends View implements RulerFormatter {
     private static final String TAG = "TimelineRuler";
     private float paddingTopBottom = convertToPx(20);
     private float paddingStart = convertToPx(20);
@@ -27,13 +35,20 @@ public class TimelineRuler extends View {
 
     private float textSize = convertSpToPx(14);
 
-    private ArrayList<String> arrTimes = new ArrayList<>();
+    private RulerFormatter rulerFormatter = this;
+
+    long minutesInADay = TimeUnit.DAYS.toMinutes(1);
+
+    public void setRulerFormatter(RulerFormatter rulerFormatter){
+        this.rulerFormatter = rulerFormatter;
+        invalidate();
+    }
 
 
-    public TimelineRuler(Context context, float lineGap, ArrayList<String> arrTimes) {
+
+    public TimelineRuler(Context context, float lineGap) {
         super(context);
         this.lineGap = lineGap;
-        this.arrTimes = arrTimes;
         init();
     }
 
@@ -84,13 +99,15 @@ public class TimelineRuler extends View {
         float startPointX = paddingStart;
         float startPoint = paddingTopBottom;
 
-        for (int i = 0; i < arrTimes.size(); i++) {
+        // total minute in a day 24*60*60 = 86400
+
+        for (int i = 0; i < minutesInADay; i++) {
 
 
             if (i % 10 == 0) {
                 timePaint.setStrokeWidth(lineBoldStroke);
                 canvas.drawLine(startPointX, startPoint, startPointX + longLineWidth, startPoint, timePaint);
-                canvas.drawText(arrTimes.get(i), startPointX + longLineWidth + 10, startPoint + textSize / 2, textPaint);
+                canvas.drawText(rulerFormatter.getValue(i), startPointX + longLineWidth + 10, startPoint + textSize / 2, textPaint);
             } else {
                 timePaint.setStrokeWidth(lineThinStroke);
                 canvas.drawLine(startPointX, startPoint, startPointX + smallLineWidth, startPoint, timePaint);
@@ -107,7 +124,7 @@ public class TimelineRuler extends View {
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
 
         int desiredWidth = getMeasuredWidth();
-        int desiredHeight = (int) (arrTimes.size() * (lineGap)) + (2 * (int) paddingTopBottom);
+        int desiredHeight = (int) (minutesInADay * (lineGap)) + (2 * (int) paddingTopBottom);
 
         int widthMode = MeasureSpec.getMode(widthMeasureSpec);
         int widthSize = MeasureSpec.getSize(widthMeasureSpec);
@@ -155,4 +172,28 @@ public class TimelineRuler extends View {
     }
 
 
+    @NonNull
+    @Override
+    public String getValue(int minute) {
+        return formatCalendar(TimeUnit.MINUTES.toMillis(minute) , "hh:mm aa");
+    }
+
+    public static Calendar convertDateStrIntoCalendar(String dateTimeStr, String dateFormatStr) {
+        try {
+            Calendar cal = Calendar.getInstance();
+            SimpleDateFormat sdf = new SimpleDateFormat(dateFormatStr, Locale.getDefault());
+            cal.setTime(sdf.parse(dateTimeStr));
+            return cal;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    String formatCalendar(Long millis, String dateTimeFormat) {
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(millis);
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat(dateTimeFormat, Locale.ENGLISH);
+        simpleDateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+        return simpleDateFormat.format(calendar.getTime());
+    }
 }

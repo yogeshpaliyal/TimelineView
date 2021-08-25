@@ -9,9 +9,9 @@ public interface TimelineListener {
 
     void parentScrollTo(int y);
 
-    void onStartChange(Calendar calendar);
+    void onStartChange(int minute);
 
-    void onEndChange(Calendar calendar);
+    void onEndChange(int minute);
 
     void onCancelClicked(TimelineAvailability bookedSlots);
 
