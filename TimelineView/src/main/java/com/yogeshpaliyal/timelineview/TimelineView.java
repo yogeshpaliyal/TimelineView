@@ -11,6 +11,7 @@ import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.widget.FrameLayout;
 
@@ -49,10 +50,10 @@ public class TimelineView extends FrameLayout {
     private boolean isEditingEnable = false;
     private String TIME_FORMAT = "hh:mm a";
     private float startPadding = convertToPx(30);
-    private TYPE type = TYPE.BOOK_SLOT;
+    private @TYPE int type = TYPE.BOOK_SLOT;
     private boolean isPublishEnable = false;
     private int startIndex = 50;
-    private Paint descPaint, textPaint, mThumbPaint1, mThumbPaint2, mThumbTextPaint;
+    private Paint descPaint = new Paint(Paint.ANTI_ALIAS_FLAG), textPaint = new Paint(Paint.ANTI_ALIAS_FLAG), mThumbPaint1 = new Paint(Paint.ANTI_ALIAS_FLAG), mThumbPaint2 =new Paint(Paint.ANTI_ALIAS_FLAG), mThumbTextPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private Calendar selectedDate = Calendar.getInstance();
     private Calendar todaysDate = Calendar.getInstance();
     private float lineGap = convertToPx(6);
@@ -122,6 +123,16 @@ public class TimelineView extends FrameLayout {
         return selectedDate;
     }
 
+    public Calendar getSelectedDateOnly() {
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(selectedDate.getTimeInMillis());
+        calendar.set(Calendar.HOUR_OF_DAY,0);
+        calendar.set(Calendar.MINUTE,0);
+        calendar.set(Calendar.SECOND,0);
+        calendar.set(Calendar.MILLISECOND,0);
+        return calendar;
+    }
+
     public void setSelectedDate(Calendar selectedDate) {
         isAutoScrolled = false;
         this.selectedDate = selectedDate;
@@ -186,12 +197,12 @@ public class TimelineView extends FrameLayout {
 
     }
 
-    public void setType(TYPE type) {
+    public void setType(@TYPE int type) {
         this.type = type;
         invalidate();
     }
 
-    public TYPE getType() {
+    public @TYPE int getType() {
         return this.type;
     }
 
@@ -200,18 +211,10 @@ public class TimelineView extends FrameLayout {
 
     private void init(Context context, AttributeSet attrs, int defStyleAttr) {
 
-        descPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         descPaint.setColor(Color.BLACK);
 
-        mThumbTextPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         mThumbTextPaint.setColor(Color.WHITE);
 
-
-        mThumbPaint1 = new Paint(Paint.ANTI_ALIAS_FLAG);
-
-        mThumbPaint2 = new Paint(Paint.ANTI_ALIAS_FLAG);
-
-        textPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         textPaint.setColor(Color.BLACK);
 
         final Resources.Theme theme = context.getTheme();
@@ -345,16 +348,23 @@ public class TimelineView extends FrameLayout {
 
     private void filterTodays() {
         arrAvailabilitySlots = new ArrayList<>();
+        arrBookedSlots = new ArrayList<>();
+        Log.d("TimelineView", "filterTodays: global slots "+arrGlobalData);
+        Calendar todayDate = getSelectedDateOnly();
         for (TimelineAvailability arrAvailabilitySlot : this.arrGlobalData) {
-            if (isInSelectedData(selectedDate, arrAvailabilitySlot.getTAStartTime(), arrAvailabilitySlot.getTAEndTime())) {
+            if (isInSelectedData(todayDate, arrAvailabilitySlot.getTAStartTime(), arrAvailabilitySlot.getTAEndTime())) {
                 arrAvailabilitySlots.add(arrAvailabilitySlot);
             }
         }
         for (TimelineBooked timelineBooked : arrBookedSlotsRaw) {
-            if (isInSelectedData(selectedDate, timelineBooked.getTBStartTime(), timelineBooked.getTBEndTime())) {
-                arrBookedSlotsRaw.add(timelineBooked);
+            if (isInSelectedData(todayDate, timelineBooked.getTBStartTime(), timelineBooked.getTBEndTime())) {
+                arrBookedSlots.add(timelineBooked);
             }
         }
+        Log.d("TimelineView", "filterTodays: availability slots "+arrAvailabilitySlots);
+        Log.d("TimelineView", "filterTodays: booked slots "+arrBookedSlots);
+
+
     }
 
     public TimelineAvailability getAvailabilitySelected() {
@@ -569,6 +579,8 @@ public class TimelineView extends FrameLayout {
     private void drawSelected(Canvas canvas) {
         float y1 = stepScaleToPixel(selection.getStartStep());
         float y2 = stepScaleToPixel(selection.getEndStep());
+        Log.d("TimelineView", "drawSelected: y1=>"+y1 +"; y2 =>"+y2);
+
 
         float right = getMeasuredWidth() - thumbRightMargin + thumbWidth / 8;
 

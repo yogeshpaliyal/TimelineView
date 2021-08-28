@@ -2,6 +2,7 @@ package com.yogeshpaliyal.timelineviewsample
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import com.yogeshpaliyal.timelineview.TYPE
 import com.yogeshpaliyal.timelineview.TimelineView
 import com.yogeshpaliyal.timelineviewsample.databinding.ActivityMainBinding
@@ -14,6 +15,10 @@ class MainActivity : AppCompatActivity() {
 
     private val arrAvailability by lazy {
         ArrayList<AvailabilityModel>()
+    }
+
+    private val arrBookings by lazy {
+        ArrayList<BookingModel>()
     }
 
 
@@ -35,10 +40,14 @@ class MainActivity : AppCompatActivity() {
         }
 
         binding.btnAdd.setOnClickListener {
+            val selectedDay = binding.timeline.selectedDateOnly.timeInMillis
             val startDate =
-                binding.timeline.selectedDate.timeInMillis + TimeUnit.MINUTES.toMillis(binding.timeline.selectedStartTime.toLong())
+                selectedDay + TimeUnit.MINUTES.toMillis(binding.timeline.selectedStartTime.toLong())
             val endDate =
-                binding.timeline.selectedDate.timeInMillis + TimeUnit.MINUTES.toMillis(binding.timeline.selectedEndTime.toLong())
+                selectedDay + TimeUnit.MINUTES.toMillis(binding.timeline.selectedEndTime.toLong())
+
+            Log.d("TimelineView", "onCreate: startDate $startDate")
+            Log.d("TimelineView", "onCreate: endDate $endDate")
             if (binding.timeline.type == TYPE.SET_AVAILABILITY) {
                 arrAvailability.add(AvailabilityModel(Calendar.getInstance().also {
                     it.timeInMillis = startDate
@@ -47,7 +56,12 @@ class MainActivity : AppCompatActivity() {
                 }))
                 binding.timeline.setArrAvailabilitySlots(arrAvailability.toList())
             } else {
-                binding.timeline.setArrAvailabilitySlots(arrAvailability.toList())
+                arrBookings.add(BookingModel(Calendar.getInstance().also {
+                    it.timeInMillis = startDate
+                }, Calendar.getInstance().also {
+                    it.timeInMillis = endDate
+                }))
+                binding.timeline.setBookingsSlots(arrBookings.toList())
             }
         }
     }

@@ -1,5 +1,8 @@
-package com.yogeshpaliyal.timelineview;
+package com.yogeshpaliyal.timelineview
 
-public enum TYPE {
-    SET_AVAILABILITY, BOOK_SLOT
+annotation class TYPE {
+   companion object{
+       const val SET_AVAILABILITY = 1
+       const val BOOK_SLOT = 2
+   }
 }
