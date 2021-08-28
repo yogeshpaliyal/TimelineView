@@ -12,6 +12,10 @@
         <attr name="timelineThumb2Bg" format="reference|color" />
         <attr name="timelineThumbTextSize" format="dimension" />
         <attr name="timelineDescTextSize" format="dimension" />
+        <attr name="timelineType" format="enum">
+            <enum name="set_availability" value="1" />
+            <enum name="book_slot" value="2" />
+        </attr>
 
     </declare-styleable>
 </resources>
