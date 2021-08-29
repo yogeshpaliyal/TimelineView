@@ -1,19 +1,12 @@
-package com.yogeshpaliyal.timelineview;
+package com.yogeshpaliyal.timelineview
 
-import com.yogeshpaliyal.timelineview.interfaces.TimelineAvailability;
+import com.yogeshpaliyal.timelineview.interfaces.TimelineAvailability
 
-import java.util.Calendar;
-
-public interface TimelineListener {
-    void onDateChange();
-
-    void parentScrollTo(int y);
-
-    void onStartChange(int minute);
-
-    void onEndChange(int minute);
-
-    void onCancelClicked(TimelineAvailability bookedSlots);
-
-    void onPublishStatusChange(boolean isEnable);
+interface TimelineListener {
+    fun onDateChange()
+    fun parentScrollTo(y: Int)
+    fun onStartChange(minute: Int)
+    fun onEndChange(minute: Int)
+    fun onCancelClicked(bookedSlots: TimelineAvailability?)
+    fun onPublishStatusChange(isEnable: Boolean)
 }

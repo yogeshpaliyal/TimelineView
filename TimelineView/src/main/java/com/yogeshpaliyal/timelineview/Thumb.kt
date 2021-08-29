@@ -1,51 +1,40 @@
-package com.yogeshpaliyal.timelineview;
+package com.yogeshpaliyal.timelineview
 
-import android.graphics.drawable.Drawable;
+import android.graphics.drawable.Drawable
 
-import androidx.annotation.Nullable;
+class Thumb {
+    private var value: Float
+    private var position: Float
+    var drawable: Drawable? = null
 
-public class Thumb {
-    private float value;
-    private float position;
-    private Drawable drawable;
-
-    public Thumb(){
-        value = 0;
-        position = 0;
+    constructor() {
+        value = 0f
+        position = 0f
     }
 
-    public Thumb(@Nullable Drawable drawable) {
-        value = 0;
-        position = 0;
+    constructor(drawable: Drawable?) {
+        value = 0f
+        position = 0f
         // Clone the drawable so we can set the states individually
-        this.drawable = drawable;
+        this.drawable = drawable
     }
 
-    public Drawable getDrawable() {
-        return drawable;
+    fun getPosition(): Float {
+        return position
     }
 
-    public void setDrawable(Drawable drawable) {
-        this.drawable = drawable;
-    }
-
-    public float getPosition() {
-        return position;
-    }
-
-    public void setPosition(float position) {
-        this.position = position;
+    fun setPosition(position: Float) {
+        this.position = position
         // Update value based on new position
-        this.value = position;
+        value = position
     }
 
-    public float getValue() {
-        return value;
+    fun getValue(): Float {
+        return value
     }
 
-    public void setValue(float value) {
-        this.value = value;
-        this.position = value;
+    fun setValue(value: Float) {
+        this.value = value
+        position = value
     }
-
 }
